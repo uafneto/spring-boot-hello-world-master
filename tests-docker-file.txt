@@ -1,0 +1,28 @@
+# Usando a imagem JDK17
+FROM openjdk:17-jdk-alpine
+
+# Definindo a versão do Maven
+ARG MAVEN_VERSION=3.9.5
+ARG USER_HOME_DIR="/root"
+
+# Definindo a URL que o Maven deve ser baixado
+#ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
+ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/3.9.5/binaries/
+
+# Instalando o Maven
+RUN mkdir -p /usr/share/maven && \
+    curl -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 && \
+    rm -f /tmp/apache-maven.tar.gz && \
+    ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+
+ENV MAVEN_HOME /usr/share/maven
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+
+# Copie o código-fonte da aplicação e builda
+COPY . /app
+WORKDIR /app
+RUN mvn clean install -DskipTests
+
+# Define the command that will be executed when the Docker container starts
+CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
